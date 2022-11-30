@@ -1,0 +1,12 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "npm",
+      "script": "start:debug",
+      "problemMatcher": [],
+      "label": "npm: start:debug",
+      "detail": "PORT=3001 nest start --debug --watch"
+    }
+  ]
+}
