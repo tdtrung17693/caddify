@@ -2,28 +2,20 @@ import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
-import { Deployment } from 'src/domain/deployment';
+import { BaseService } from 'src/common/base.service';
+import { CaddySite } from './type';
 
 type CaddyConfig = unknown;
-interface Site {
-  siteName: string;
-  rootDirectory: string;
-  hostName: string;
-}
-
 @Injectable()
-export class CaddyService {
+export class CaddyService extends BaseService {
   private readonly caddyApiBaseUrl: string;
-  private readonly siteBaseDomain: string;
-  private readonly siteBaseDirectory: string;
 
   constructor(private httpClient: HttpService, configService: ConfigService) {
+    super();
     this.caddyApiBaseUrl = configService.get('CADDY_API_BASE_URL');
-    this.siteBaseDomain = configService.get('SITE_BASE_DOMAIN');
-    this.siteBaseDirectory = configService.get('SITE_BASE_DIRECTORY');
   }
 
-  protected generateSiteConfig(site: Site) {
+  protected generateSiteConfig(site: CaddySite) {
     const { siteName, rootDirectory, hostName } = site;
 
     return {
@@ -48,20 +40,7 @@ export class CaddyService {
     );
   }
 
-  private getSiteHostName(siteName: string) {
-    return `${siteName}.${this.siteBaseDomain}`;
-  }
-
-  private getSiteRootDirectory(siteName: string) {
-    return `${this.siteBaseDirectory}/${siteName}`;
-  }
-
-  async reloadConfig(deployments: Deployment[]) {
-    const sites: Site[] = deployments.map((deployment) => ({
-      hostName: this.getSiteHostName(deployment.id),
-      rootDirectory: this.getSiteRootDirectory(deployment.id),
-      siteName: deployment.id,
-    }));
+  async reloadConfig(sites: CaddySite[]) {
     const sitesConfig = sites.map(this.generateSiteConfig);
     const adminConfig = this.getAdminConfig();
 
